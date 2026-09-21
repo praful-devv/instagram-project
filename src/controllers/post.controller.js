@@ -78,6 +78,53 @@ const getAllPostController = async(req,res)=>{
 
 }
 
+const getPostDetailsController = async(req,res)=>{
+
+  const token = req.cookies.token
+
+  if(!token){
+    res.status(401).json({
+      message:"unauthorized access"
+    })
+  }
+
+  let decode;
+  try {
+      decode = await jwt.verify(token,process.env.JWT_SECRETS)
+  } catch (error) {
+      return res.status(401).json({
+        message:"unauthorized access"
+      })
+  }
+  const userId = decode.id
+  const postId = req.params.id
+
+  const post = await postModel.findById(postId)
+
+  if(!post){
+    return res.status(404).json({
+      message:"post not found"
+    })
+  }
+
+  const isUserValid = post.createdBy.toString() === userId;
+
+  if(!isUserValid){
+    return res.status(403).json({
+      message:"forbidden Content"
+    })
+  }
+
+  return res.status(200).json({
+    message:"get post details",
+    post
+  })
+
+}
 
 
-module.exports = { createPostController, getAllPostController };
+module.exports = {
+  createPostController,
+  getAllPostController,
+  getPostDetailsController,
+};
