@@ -42,4 +42,42 @@ const createPostController = async (req, res) => {
   });
 };
 
-module.exports = { createPostController };
+const getAllPostController = async(req,res)=>{
+
+  const token = req.cookies.token
+
+  if(!token){
+    return res.status(401).json({
+      message:"unauthorized access"
+    })
+  }
+
+  let decode;
+  try {
+      decode = await jwt.verify(token, process.env.JWT_SECRETS);
+  } catch (error) {
+      return res.status(401).json({
+        message:"unauthorized access"
+      }) 
+  }
+
+  const userId = decode.id
+
+  const post = await postModel.find({createdBy:userId})
+
+  if(!post){
+    return res.status(404).json({
+      message:"post not found"
+    })
+  }
+
+  res.status(200).json({
+    message:"get all post successfully",
+    post
+  })
+
+}
+
+
+
+module.exports = { createPostController, getAllPostController };
